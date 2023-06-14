@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import PersonsService from './services/persons'
-import { AddPersonForm, Persons } from './components/persons'
+import { AddPersonForm, Persons } from './components/Persons'
+import Notification from './components/Notification'
+
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [searchValue, setSearchValue] = useState('')
+  const [message, setMessage] = useState(null)
+  const [alertLevel, setAlertLevel] = useState('success')
 
   useEffect(() => {
     PersonsService.getAll().then(data => {
@@ -32,6 +36,18 @@ const App = () => {
         setPersons(persons.map(person => person.id !== updatedPerson.id ? person : data))
         setNewName('')
         setNewPhone('')
+        setMessage(`${updatedPerson.name} was updated successfully`)
+        setAlertLevel('success')
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
+      }).catch(error => {
+        setMessage(`${updatedPerson.name} was already deleted from the server`)
+        setAlertLevel('error')
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
+        setPersons(persons.filter(person => person.id !== updatedPerson.id))
       })
       return
     }
@@ -44,6 +60,11 @@ const App = () => {
       setPersons([...persons, data])
       setNewName('')
       setNewPhone('')
+      setMessage(`${personObject.name} was added successfully`)
+      setAlertLevel('success')
+      setTimeout(() => {
+        setMessage(null)
+      }, 5000)
     })
   }
 
@@ -52,6 +73,11 @@ const App = () => {
     if (window.confirm(`Delete ${person.name}?`)) {
       PersonsService.deleteOne(id).then(() => {
         setPersons(persons.filter(person => person.id !== id))
+        setMessage(`${person.name} was deleted successfully`)
+        setAlertLevel('success')
+        setTimeout(() => {
+          setMessage(null)
+        }, 5000)
       })
     }
   }
@@ -59,6 +85,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message} alertLevel={alertLevel} />
       <AddPersonForm
         onSubmit={addName}
         newName={newName}
